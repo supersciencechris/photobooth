@@ -5,6 +5,7 @@ import os
 import PIL.Image
 import cups
 import RPi.GPIO as GPIO
+import getpass
 
 from threading import Thread
 from pygame.locals import *
@@ -44,7 +45,7 @@ GPIO.setup(BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 pygame.init()  # Initialise pygame
 pygame.mouse.set_visible(False) #hide the mouse cursor
 infoObject = pygame.display.Info()
-screen = pygame.display.set_mode((infoObject.current_w,infoObject.current_h), pygame.FULLSCREEN)  # Full screen 
+screen = pygame.display.set_mode((infoObject.current_w,infoObject.current_h), pygame.FULLSCREEN)  # Full screen
 background = pygame.Surface(screen.get_size())  # Create the background object
 background = background.convert()  # Convert it to a background
 
@@ -89,14 +90,14 @@ def input(events):
 			
 # set variables to properly display the image on screen at right ratio
 def set_demensions(img_w, img_h):
-	# Note this only works when in booting in desktop mode. 
+	# Note this only works when in booting in desktop mode.
 	# When running in terminal, the size is not correct (it displays small). Why?
 
     # connect to global vars
     global transform_y, transform_x, offset_y, offset_x
 
     # based on output screen resolution, calculate how to display
-    ratio_h = (infoObject.current_w * img_h) / img_w 
+    ratio_h = (infoObject.current_w * img_h) / img_w
 
     if (ratio_h < infoObject.current_h):
         #Use horizontal black bars
@@ -122,7 +123,7 @@ def set_demensions(img_w, img_h):
 def InitFolder():
     global imagefolder
     global Message
- 
+
     Message = 'Folder Check...'
     UpdateDisplay()
     Message = ''
@@ -130,7 +131,7 @@ def InitFolder():
     #check image folder existing, create if not exists
     if not os.path.isdir(imagefolder):	
         os.makedirs(imagefolder)	
-            
+
     imagefolder2 = os.path.join(imagefolder, 'images')
     if not os.path.isdir(imagefolder2):
         os.makedirs(imagefolder2)
@@ -172,7 +173,7 @@ def UpdateDisplay():
     global screenPicture
     global backgroundPicture
     global CountDownPhoto
-   
+
     background.fill(pygame.Color("white"))  # White background
     #DisplayText(100, Message)
     #DisplayText(800, Numeral)
@@ -216,12 +217,12 @@ def UpdateDisplay():
                     backgroundPicture.blit(text, textpos)
             else:
                     background.blit(text, textpos)
-    
+
     if(ImageShowed == True):
     	screenPicture.blit(backgroundPicture, (0, 0))   	
     else:
     	screen.blit(background, (0, 0))
-   
+
     pygame.display.flip()
     return
 
@@ -280,12 +281,12 @@ def CapturePicture():
 	BackgroundColor = "black"
 
 	for x in range(3, -1, -1):
-                if x == 0:                        
+                if x == 0:
                         Numeral = ""
                         Message = "STRIKE A POSE"
-                else:                        
+                else:
                         Numeral = str(x)
-                        Message = ""                
+                        Message = ""
                 UpdateDisplay()
                 time.sleep(1)
 
@@ -296,12 +297,14 @@ def CapturePicture():
         imagecounter = imagecounter + 1
         ts = time.time()
         filename = os.path.join(imagefolder, 'images', str(imagecounter)+"_"+str(ts) + '.jpg')
+        fullsize = os.path.join('home', getpass.getuser, 'fullsize_'+ str(ts) + '.jpg')
+        camera.capture(fullsize)
         camera.capture(filename, resize=(IMAGE_WIDTH, IMAGE_HEIGHT))
         camera.stop_preview()
         ShowPicture(filename, 2)
         ImageShowed = False
         return filename
-    
+
 	
 def TakePictures():
         global imagecounter
@@ -319,7 +322,7 @@ def TakePictures():
 	global TotalImageCount
 
         input(pygame.event.get())
-        CountDownPhoto = "1/3"        
+        CountDownPhoto = "1/3"
         filename1 = CapturePicture()
 
         CountDownPhoto = "2/3"
@@ -334,7 +337,7 @@ def TakePictures():
 
         image1 = PIL.Image.open(filename1)
         image2 = PIL.Image.open(filename2)
-        image3 = PIL.Image.open(filename3)   
+        image3 = PIL.Image.open(filename3)
         TotalImageCount = TotalImageCount + 1
 	
         bgimage.paste(image1, (625, 30))
@@ -378,18 +381,18 @@ def TakePictures():
                                 if printqueuelength > 1:
                                         ShowPicture('/home/pi/Desktop/tempprint.jpg',3)
                                         conn.enablePrinter(printer_name)
-                                        Message = "Impression impossible"                
+                                        Message = "Impression impossible"
                                         UpdateDisplay()
                                         time.sleep(1)
                                 else:
                                         conn.printFile(printer_name, '/home/pi/Desktop/tempprint.jpg', "PhotoBooth", {})
-                                        time.sleep(40)            
+                                        time.sleep(40)
                 else:
                         Message = "Nous vous enverrons vos photos"
                         Numeral = ""
                         UpdateDisplay()
                         time.sleep(1)
-                
+
         Message = ""
         Numeral = ""
         ImageShowed = False
@@ -410,7 +413,7 @@ def WaitForPrintingEvent():
     countDown = 5
     GPIO.add_event_detect(BUTTON_PIN, GPIO.RISING)
     GPIO.add_event_callback(BUTTON_PIN, MyCallback)
-    
+
     while Printing == False and countDown > 0:
         if(Printing == True):
             return
@@ -419,16 +422,16 @@ def WaitForPrintingEvent():
                 if event.key == pygame.K_DOWN:
                     GPIO.remove_event_detect(BUTTON_PIN)
                     Printing = True
-                    return        
+                    return
         BackgroundColor = ""
         Numeral = str(countDown)
         Message = ""
-        UpdateDisplay()        
+        UpdateDisplay()
         countDown = countDown - 1
         time.sleep(1)
 
     GPIO.remove_event_detect(BUTTON_PIN)
-        
+
 	
 def WaitForEvent():
     global pygame
