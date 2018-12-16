@@ -297,7 +297,7 @@ def CapturePicture():
         imagecounter = imagecounter + 1
         ts = time.time()
         filename = os.path.join(imagefolder, 'images', str(imagecounter)+"_"+str(ts) + '.jpg')
-        fullsize = os.path.join('home', getpass.getuser, 'fullsize_'+ str(ts) + '.jpg')
+        fullsize = os.path.join('home', getpass.getuser(), 'fullsize_'+ str(ts) + '.jpg')
         camera.capture(fullsize)
         camera.capture(filename, resize=(IMAGE_WIDTH, IMAGE_HEIGHT))
         camera.stop_preview()
